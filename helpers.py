@@ -1,4 +1,5 @@
 from faker import Faker
+from data import Status as S
 
 
 class Helpers:
@@ -17,3 +18,13 @@ class Helpers:
     def fake_email():
         faker = Faker()
         return faker.email()
+
+    @staticmethod
+    def check_success_response(response):
+        assert response.status_code == S.STATUS_200
+        assert response.json()['success'] is True
+
+    @staticmethod
+    def check_response_mail_name(response, email, name):
+        assert response.json()['user']['email'] == email
+        assert response.json()['user']['name'] == name

@@ -1,6 +1,9 @@
 import allure
 from client_requests import ClientRequests as Client
-from data import Data as D
+from data import Errors as E
+from data import Status as S
+from data import Hash as H
+from helpers import Helpers as Help
 
 
 class TestCreateOrder:
@@ -23,8 +26,7 @@ class TestCreateOrder:
         payload = {"ingredients": [ingredient_1, ingredient_2]}
         header = {'Authorization': new_user['json']['accessToken']}
         response = client.create_order(payload, header)
-        assert response.status_code == D.STATUS_200
-        assert response.json()['success'] is True
+        Help.check_success_response(response)
         assert 'бургер' in response.json()['name']
         assert isinstance(response.json()['order']['ingredients'], list)
         assert isinstance(response.json()['order']['number'], int)
@@ -44,8 +46,7 @@ class TestCreateOrder:
         ingredient_2 = get_ingredient.json()['data'][1]['_id']
         payload = {"ingredients": [ingredient_1, ingredient_2]}
         response = client.create_order(payload)
-        assert response.status_code == D.STATUS_200
-        assert response.json()['success'] is True
+        Help.check_success_response(response)
         assert 'бургер' in response.json()['name']
         assert isinstance(response.json()['order']['number'], int)
 
@@ -57,8 +58,8 @@ class TestCreateOrder:
         client = Client()
         payload = {"ingredients": [""]}
         response = client.create_order(payload)
-        assert response.status_code == D.STATUS_400
-        assert response.json()['message'] == D.ERROR_INGREDIENTS_NOT_PROVIDED
+        assert response.status_code == S.STATUS_400
+        assert response.json()['message'] == E.ERROR_INGREDIENTS_NOT_PROVIDED
 
     @allure.title('Проверка создания заказа без ингредиентов с авторизацией')
     @allure.description('Отправляем запрос на создание заказа без ингредиентов с авторизацией'
@@ -69,8 +70,8 @@ class TestCreateOrder:
         payload = {"ingredients": [""]}
         header = {'Authorization': new_user['json']['accessToken']}
         response = client.create_order(payload, header)
-        assert response.status_code == D.STATUS_400
-        assert response.json()['message'] == D.ERROR_INGREDIENTS_NOT_PROVIDED
+        assert response.status_code == S.STATUS_400
+        assert response.json()['message'] == E.ERROR_INGREDIENTS_NOT_PROVIDED
 
     @allure.title('Проверка создания заказа с неверным хэшем ингредиентов')
     @allure.description('Отправляем запрос на создание заказа с неверным хэшем ингредиентов'
@@ -78,9 +79,8 @@ class TestCreateOrder:
                         '"success": false, "message": "One or more ids provided are incorrect"')
     def test_create_order_with_wrong_hash_ingredients(self):
         client = Client()
-        payload = {"ingredients": [D.INCORRECT_INGREDIENT_HASH]}
+        payload = {"ingredients": [H.INCORRECT_INGREDIENT_HASH]}
         response = client.create_order(payload)
         assert response.json()['success'] is False
-        assert response.json()['message'] == D.ERROR_INGREDIENTS_NOT_CORRECT
-        assert response.status_code == D.STATUS_500  # must be 500 by documentation
-
+        assert response.json()['message'] == E.ERROR_INGREDIENTS_NOT_CORRECT
+        assert response.status_code == S.STATUS_500  # must be 500 by documentation

@@ -2,7 +2,8 @@ import allure
 import pytest
 from client_requests import ClientRequests as Client
 from helpers import Helpers as Help
-from data import Data as D
+from data import Errors as E
+from data import Status as S
 
 
 class TestCreateUser:
@@ -10,7 +11,8 @@ class TestCreateUser:
     @allure.title('Проверка создания пользователя')
     @allure.description('Создаем сущность пользователя, проверяем, что в ответе получаем статус 200, в теле ответа '
                         'возвращается success: true, возвращаются email и name созданного пользователя, а также что'
-                        'в ответе содержатся refreshToken и accessToken')
+                        'в ответе содержатся refreshToken и accessToken'
+                        'в конце удаляем созданного пользователя')
     def test_create_new_user(self):
         email = Help.fake_email()
         password = Help.fake_password()
@@ -18,12 +20,11 @@ class TestCreateUser:
         payload = {"email": email, "password": password, "name": name}
         client = Client()
         response = client.create_user(payload)
-        assert response.status_code == D.STATUS_200
-        assert response.json()['success'] is True
-        assert response.json()['user']['email'] == email
-        assert response.json()['user']['name'] == name
+        Help.check_success_response(response)
+        Help.check_response_mail_name(response, email, name)
         assert 'accessToken' in response.json()
         assert 'refreshToken' in response.json()
+        client.delete_user({'Authorization': response.json()['accessToken']})
 
     @allure.title('Проверка создания пользователя, который уже зарегистрирован')
     @allure.description('Создаем сущность пользователя, отправляем на регистрацию, далее отправляем на регистрацию '
@@ -33,9 +34,9 @@ class TestCreateUser:
         payload = {"email": new_user['email'], "password": new_user['password'], "name": new_user['name']}
         client = Client()
         response = client.create_user(payload)
-        assert response.status_code == D.STATUS_403
+        assert response.status_code == S.STATUS_403
         assert response.json()['success'] is False
-        assert response.json()['message'] == D.ERROR_ALREADY_EXISTS
+        assert response.json()['message'] == E.ERROR_ALREADY_EXISTS
 
     @allure.title('Проверка создания пользователя без одного из обязательных полей')
     @allure.description('Создаем пользователя без одного из обязательных полей: без имени, без пароля, без имэйла'
@@ -47,5 +48,5 @@ class TestCreateUser:
         payload.pop(field)
         client = Client()
         response_create = client.create_user(payload)
-        assert response_create.status_code == D.STATUS_403
-        assert response_create.json()['message'] == D.ERROR_MANDATORY_FIELD_MISSING
+        assert response_create.status_code == S.STATUS_403
+        assert response_create.json()['message'] == E.ERROR_MANDATORY_FIELD_MISSING

@@ -1,5 +1,7 @@
 import allure
-from data import Data as D
+from data import Errors as E
+from data import Status as S
+from helpers import Helpers as Help
 from client_requests import ClientRequests as Client
 
 
@@ -13,8 +15,7 @@ class TestGetOrdersByUser:
         client = Client()
         header = {'Authorization': new_user['json']['accessToken']}
         response = client.get_orders_by_user({}, header)
-        assert response.status_code == D.STATUS_200
-        assert response.json()['success'] is True
+        Help.check_success_response(response)
         assert isinstance(response.json()['orders'], list)
         assert 'total' in response.json()
         assert 'totalToday' in response.json()
@@ -26,5 +27,5 @@ class TestGetOrdersByUser:
     def test_get_orders_by_unauthorized_user(self):
         client = Client()
         response = client.get_orders_by_user({}, '')
-        assert response.status_code == D.STATUS_401
-        assert response.json()['message'] == D.ERROR_NOT_AUTHORIZED
+        assert response.status_code == S.STATUS_401
+        assert response.json()['message'] == E.ERROR_NOT_AUTHORIZED

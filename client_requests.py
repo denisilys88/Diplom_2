@@ -1,11 +1,12 @@
 import allure
 import requests
+from data import Urls
 
 
 class ClientRequests:
 
     def __init__(self):
-        self.host = 'https://stellarburgers.nomoreparties.site/api/'
+        self.host = Urls.SITE_API
 
     @allure.step('вызываем нужный метод requests по переданным параметрам')
     def make_request(self, path, type, payload=None, headers_data=None):
@@ -16,7 +17,7 @@ class ClientRequests:
         elif type == 'get':
             response = requests.get(url, data=payload, headers=headers_data)
         elif type == 'delete':
-            response = requests.delete(url)
+            response = requests.delete(url, headers=headers_data)
         elif type == 'put':
             response = requests.put(url, data=payload)
         elif type == 'patch':
@@ -27,6 +28,11 @@ class ClientRequests:
     def create_user(self, payload):
         path = f"auth/register"
         return self.make_request(path, 'post', payload)
+
+    @allure.step('вызываем метод make_request для ручки удаления пользователя')
+    def delete_user(self, headers_data, payload=None):
+        path = f"auth/user"
+        return self.make_request(path, 'delete', payload, headers_data)
 
     @allure.step('вызываем метод make_request для ручки авторизации пользователя')
     def login_user(self, payload):

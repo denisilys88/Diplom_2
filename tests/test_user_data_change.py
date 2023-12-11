@@ -1,7 +1,8 @@
 import allure
 from client_requests import ClientRequests as Client
 from helpers import Helpers as Help
-from data import Data as D
+from data import Errors as E
+from data import Status as S
 
 
 class TestUserDataChange:
@@ -20,13 +21,11 @@ class TestUserDataChange:
         payload = {"email": email, "password": password, "name": name}
         header = {'Authorization': new_user['json']['accessToken']}
         response = client.update_user_data(payload, header)
-        assert response.status_code == D.STATUS_200
-        assert response.json()['success'] is True
-        assert response.json()['user']['email'] == email
-        assert response.json()['user']['name'] == name
+        Help.check_success_response(response)
+        Help.check_response_mail_name(response, email, name)
         payload_login = {'email': email, 'password': password}
         response_login = client.login_user(payload_login)
-        assert response_login.status_code == D.STATUS_200
+        assert response_login.status_code == S.STATUS_200
 
     @allure.title('Проверка изменения имейла авторизованного пользователя')
     @allure.description('Меняем email авторизованного пользователя, проверяем, что в ответе получаем статус 200, '
@@ -39,13 +38,11 @@ class TestUserDataChange:
         payload = {"email": email}
         header = {'Authorization': new_user['json']['accessToken']}
         response = client.update_user_data(payload, header)
-        assert response.status_code == D.STATUS_200
-        assert response.json()['success'] is True
-        assert response.json()['user']['email'] == email
-        assert response.json()['user']['name'] == new_user['name']
+        Help.check_success_response(response)
+        Help.check_response_mail_name(response, email, new_user['name'])
         payload_login = {'email': email, 'password': new_user['password']}
         response_login = client.login_user(payload_login)
-        assert response_login.status_code == D.STATUS_200
+        assert response_login.status_code == S.STATUS_200
 
     @allure.title('Проверка изменения пароля авторизованного пользователя')
     @allure.description('Меняем password авторизованного пользователя, проверяем, что в ответе получаем статус 200, '
@@ -58,13 +55,11 @@ class TestUserDataChange:
         payload = {"password": password}
         header = {'Authorization': new_user['json']['accessToken']}
         response = client.update_user_data(payload, header)
-        assert response.status_code == D.STATUS_200
-        assert response.json()['success'] is True
-        assert response.json()['user']['email'] == new_user['email']
-        assert response.json()['user']['name'] == new_user['name']
+        Help.check_success_response(response)
+        Help.check_response_mail_name(response, new_user['email'], new_user['name'])
         payload_login = {'email': new_user['email'], 'password': password}
         response_login = client.login_user(payload_login)
-        assert response_login.status_code == D.STATUS_200
+        assert response_login.status_code == S.STATUS_200
 
     @allure.title('Проверка изменения имени авторизованного пользователя')
     @allure.description('Меняем name авторизованного пользователя, проверяем, что в ответе получаем статус 200, '
@@ -76,10 +71,8 @@ class TestUserDataChange:
         payload = {"name": name}
         header = {'Authorization': new_user['json']['accessToken']}
         response = client.update_user_data(payload, header)
-        assert response.status_code == D.STATUS_200
-        assert response.json()['success'] is True
-        assert response.json()['user']['email'] == new_user['email']
-        assert response.json()['user']['name'] == name
+        Help.check_success_response(response)
+        Help.check_response_mail_name(response, new_user['email'], name)
 
     @allure.title('Проверка изменения данных неавторизованного пользователя')
     @allure.description('Меняем данные зарегистрированного, но неавторизованного пользователя, '
@@ -90,5 +83,5 @@ class TestUserDataChange:
         client = Client()
         payload = {"email": new_user['email'], 'password': Help.fake_password(), 'name': Help.fake_name()}
         response = client.update_user_data(payload)
-        assert response.status_code == D.STATUS_401
-        assert response.json()['message'] == D.ERROR_NOT_AUTHORIZED
+        assert response.status_code == S.STATUS_401
+        assert response.json()['message'] == E.ERROR_NOT_AUTHORIZED

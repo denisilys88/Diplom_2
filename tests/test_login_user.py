@@ -1,6 +1,7 @@
 import allure
 import pytest
-from data import Data as D
+from data import Errors as E
+from data import Status as S
 from helpers import Helpers as Help
 from client_requests import ClientRequests as Client
 
@@ -15,10 +16,8 @@ class TestLoginUser:
         client = Client()
         payload = {'email': new_user['email'], 'password': new_user['password']}
         response = client.login_user(payload)
-        assert response.status_code == D.STATUS_200
-        assert response.json()['success'] is True
-        assert response.json()['user']['email'] == new_user['email']
-        assert response.json()['user']['name'] == new_user['name']
+        Help.check_success_response(response)
+        Help.check_response_mail_name(response, new_user['email'], new_user['name'])
         assert 'accessToken' in response.json()
         assert 'refreshToken' in response.json()
 
@@ -30,9 +29,9 @@ class TestLoginUser:
         client = Client()
         payload = {'email': Help.fake_email(), 'password': Help.fake_password()}
         response = client.login_user(payload)
-        assert response.status_code == D.STATUS_401
+        assert response.status_code == S.STATUS_401
         assert response.json()['success'] is False
-        assert response.json()['message'] == D.ERROR_WRONG_LOGIN
+        assert response.json()['message'] == E.ERROR_WRONG_LOGIN
 
     @allure.title('Проверка логина пользователя без одного из обязательных полей - без имейла или пароля')
     @allure.description('Логиним пользователя без одного из обязательных полей: без пароля, без имэйла'
@@ -44,5 +43,5 @@ class TestLoginUser:
         payload.pop(field)
         client = Client()
         response_create = client.login_user(payload)
-        assert response_create.status_code == D.STATUS_401
-        assert response_create.json()['message'] == D.ERROR_WRONG_LOGIN
+        assert response_create.status_code == S.STATUS_401
+        assert response_create.json()['message'] == E.ERROR_WRONG_LOGIN
